@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/history_screen.dart';
+import 'screens/register_screen.dart';
 
 void main() {
   runApp(EffortEstimatorApp());
@@ -56,6 +57,7 @@ class EffortEstimatorApp extends StatelessWidget {
             '/login': (context) => LoginScreen(),
             '/home': (context) => HomeScreen(),
             '/history': (context) => HistoryScreen(),
+            '/register': (context) => RegisterScreen(), // <-- добавить это
           },
         );
       },

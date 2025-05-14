@@ -1,42 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _error;
   bool _loading = false;
 
-  Future<void> _login() async {
+  Future<void> _register() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      setState(() {
+        _error = 'Введите логин и пароль';
+      });
+      return;
+    }
+
     setState(() {
       _loading = true;
       _error = null;
     });
 
     final response = await http.post(
-      Uri.parse('http://localhost:8000/login'),
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {
-        'username': _usernameController.text,
-        'password': _passwordController.text,
-      },
+      Uri.parse('http://localhost:8000/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'username': username, 'password': password}),
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', data['access_token']);
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pop(context); // Возврат к экрану логина
     } else {
+      final data = jsonDecode(response.body);
       setState(() {
-        _error = 'Неверный логин или пароль';
+        _error = data['detail'] ?? 'Ошибка регистрации';
       });
     }
 
@@ -60,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                color: Colors.grey[900], // <-- всегда серая карточка
+                color: Colors.grey[900], // Стиль как у login_screen
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
                   child: Column(
@@ -68,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        'Вход в систему',
+                        'Регистрация',
                         textAlign: TextAlign.center,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
@@ -100,9 +104,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
-                        onPressed: _loading ? null : _login,
-                        icon: Icon(Icons.login),
-                        label: Text(_loading ? 'Вход...' : 'Войти'),
+                        onPressed: _loading ? null : _register,
+                        icon: Icon(Icons.person_add),
+                        label: Text(
+                            _loading ? 'Регистрация...' : 'Зарегистрироваться'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: colorScheme.onPrimary,
@@ -121,15 +126,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           textAlign: TextAlign.center,
                         ),
                       ],
-                      const SizedBox(height: 16),
-                      Divider(height: 1, color: colorScheme.outline),
                       const SizedBox(height: 12),
                       TextButton.icon(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/register');
+                          Navigator.pop(context);
                         },
-                        icon: Icon(Icons.person_add),
-                        label: Text("Нет аккаунта? Зарегистрироваться"),
+                        icon: Icon(Icons.arrow_back),
+                        label: Text("Назад ко входу"),
                         style: TextButton.styleFrom(
                           foregroundColor: colorScheme.primary,
                           textStyle: TextStyle(fontSize: 15),
